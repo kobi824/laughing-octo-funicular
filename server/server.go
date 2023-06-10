@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/twilio/twilio-go"
+	api "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
 type Server struct {
@@ -55,11 +58,36 @@ func (s *Server) Send(w http.ResponseWriter, r *http.Request) error {
 	msg := NewMessage("Message")
 	return Write(w, http.StatusAccepted, msg)
 }
+
+func (s *Server) Twilio(w http.ResponseWriter, r *http.Request) error {
+	client := twilio.NewRestClient()
+	msg := GetMessage("This is a test message")
+	p := &api.CreateMessageParams{}
+	p.SetBody(msg)
+	p.SetFrom(os.Getenv("NUM2"))
+	p.SetTo(os.Getenv("NUM"))
+
+	req, err := client.Api.CreateMessage(p)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	if req.Sid != nil {
+		fmt.Println(*req.Sid)
+	} else {
+		fmt.Println(req.Sid)
+	}
+	return Write(w, http.StatusAccepted, msg)
+}
+
+func GetMessage(msg string) string {
+	return msg
+}
+
 func (s *Server) Start() {
 	fmt.Printf("STARTING SERVER ON PORT: %s", s.Port)
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", HandleFunc(s.Send))
+	router.HandleFunc("/", HandleFunc(s.Twilio))
 	log.Fatal(http.ListenAndServe(s.Port, router))
 }
