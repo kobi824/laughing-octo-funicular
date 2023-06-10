@@ -54,11 +54,6 @@ func NewServer(port string) *Server {
 	return s
 }
 
-func (s *Server) Send(w http.ResponseWriter, r *http.Request) error {
-	msg := NewMessage("Message")
-	return Write(w, http.StatusAccepted, msg)
-}
-
 func (s *Server) Twilio(w http.ResponseWriter, r *http.Request) error {
 	client := twilio.NewRestClient()
 	msg := GetMessage("This is a test message")
